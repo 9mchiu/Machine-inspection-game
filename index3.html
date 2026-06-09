@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>機台檢查遊戲 - 守護森林安全計畫</title>
+    <link rel="icon" type="image/png" href="mascot.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
+            background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+            color: #2E5C3E;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2E7D32 0%, #388E3C 50%, #43A047 100%);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(46, 125, 50, 0.3);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #FFFFFF;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: #C8E6C9;
+            margin-top: 5px;
+        }
+
+        .mascot-small {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .tab-container {
+            display: flex;
+            background-color: #FFFFFF;
+            border-bottom: 3px solid #2E7D32;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background-color: #F1F8E9;
+            color: #558B2F;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background-color: #E8F5E9;
+        }
+
+        .tab.active {
+            background-color: #2E7D32;
+            color: #ffffff;
+            border-bottom: 3px solid #1B5E20;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+        }
+
+        .content {
+            display: none;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Game Page Styles */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .timer-box {
+            background: linear-gradient(135deg, #66BB6A 0%, #4CAF50 100%);
+            padding: 15px 25px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 120px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #FFFFFF;
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+        }
+
+        .timer-box .time-display {
+            font-size: 32px;
+            color: #FFFFFF;
+        }
+
+        .score-box {
+            background: linear-gradient(135deg, #81C784 0%, #66BB6A 100%);
+            padding: 15px 25px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 120px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #FFFFFF;
+            box-shadow: 0 4px 8px rgba(129, 199, 132, 0.2);
+        }
+
+        .score-box .score-display {
+            font-size: 32px;
+            color: #FFFFFF;
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            box-shadow: 0 4px 8px rgba(46, 125, 50, 0.2);
+        }
+
+        .start-button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(46, 125, 50, 0.3);
+        }
+
+        .start-button:disabled {
+            background-color: #BDBDBD;
+            cursor: not-allowed;
+            /* 底圖透明度 */
+            opacity: 1.0; 
+        }
+
+        .start-button-centered {
+            background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 28px 64px;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            min-height: 88px;
+            box-shadow: 0 6px 12px rgba(46, 125, 50, 0.25);
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+        }   
+
+        .game-mascot {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+
+            background-image: url('mascot.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+
+            z-index: 90;
+            pointer-events: none;
+        }
+
+        .start-button-centered:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            transform: translate(-50%, -50%) scale(1.05);
+            box-shadow: 0 6px 12px rgba(46, 125, 50, 0.3);
+        }
+
+        .start-button-centered:disabled {
+            background-color: #BDBDBD;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* 當遊戲開始後隱藏開始按鈕 */
+        .start-button-centered.hidden {
+            display: none;
+        }
+
+        .image-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 12px auto;
+            border: 2px solid #C8E6C9;
+            box-shadow: 0 4px 8px rgba(46, 125, 50, 0.1);
+
+            width: min(92vw, 720px);
+            height: min(62vh, 760px);
+
+            align-self: center;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: crosshair;
+        }
+
+        .image-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+        }
+
+        .game-bg {
+            position: absolute;
+            inset: 0;
+
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            opacity: 0.5;   /* 可自行調整：0.08 ~ 0.18 */
+
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            cursor: crosshair;
+          
+        }
+
+        .image-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            cursor: crosshair;
+        }
+
+        /*
+        .game-mascot {
+            position: absolute;
+            top: 65%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+
+            background-image: url('mascot.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+
+            z-index: 20;
+            pointer-events: none;
+        }
+        */
+        .start-button-centered {
+            background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            min-height: 88px;
+            box-shadow: 0 6px 12px rgba(46, 125, 50, 0.25);
+
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-display {
+            color: #2E7D32;
+            text-align: center;
+            font-size: 14px;
+            min-height: 20px;
+            font-weight: bold;
+        }
+
+        .question-info {
+            text-align: center;
+            color: #2E7D32;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .leaderboard-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2E7D32;
+        }
+
+        .leaderboard-table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 8px rgba(46, 125, 50, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+            position: sticky;
+            top: 0;
+        }
+
+        thead tr th {
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: #FFFFFF;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #E8F5E9;
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #F1F8E9;
+        }
+
+        tbody tr td {
+            padding: 12px 15px;
+            text-align: center;
+            color: #2E5C3E;
+        }
+
+        tbody tr td:nth-child(1) {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        tbody tr td:nth-child(2) {
+            color: #2E7D32;
+            font-weight: bold;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background-color: #4CAF50;
+            color: #FFFFFF;
+            border-radius: 50%;
+            line-height: 28px;
+            margin-right: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .rank-badge.first {
+            background-color: #FFC107;
+            color: #2E5C3E;
+        }
+
+        .rank-badge.second {
+            background-color: #81C784;
+            color: #FFFFFF;
+        }
+
+        .rank-badge.third {
+            background-color: #66BB6A;
+            color: #FFFFFF;
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-self: center;
+            min-width: 200px;
+            box-shadow: 0 4px 8px rgba(46, 125, 50, 0.2);
+        }
+
+        .export-button:hover {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            transform: scale(1.05);
+        }
+
+        .clear-button {
+            background-color: #90A4AE;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-self: center;
+        }
+
+        .clear-button:hover {
+            background-color: #78909C;
+        }
+
+        /* ==================== 歡迎彈跳視窗 Modal ====================  */
+        .welcome-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-modal.show {
+            display: flex;
+        }
+
+        .welcome-content {
+            background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+            padding: 48px 40px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 12px 24px rgba(46, 125, 50, 0.3);
+            border: 3px solid #4CAF50;
+            width: min(88vw, 680px);
+            min-height: 620px;
+            position: relative;
+        }
+
+        .welcome-content h2 {
+            color: #2E7D32;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        .welcome-content p {
+            color: #558B2F;
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .mascot-welcome {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 24px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .welcome-input {
+            width: 100%;
+            padding: 18px;
+            margin: 18px 0;
+            border: 2px solid #4CAF50;
+            border-radius: 14px;
+            background-color: #FFFFFF;
+            color: #2E5C3E;
+            font-size: 20px;
+        }
+
+        .welcome-input::placeholder {
+            color: #90A4AE;
+        }
+
+        .welcome-input:focus {
+            outline: none;
+            border-color: #2E7D32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .welcome-button {
+            background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 14px;
+            cursor: pointer;
+            width: 100%;
+            min-height: 72px;
+        }
+
+        .welcome-button:hover {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            transform: scale(1.02);
+        }
+
+        /* ==================== 遊戲結束 Modal ====================  */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 12px 24px rgba(46, 125, 50, 0.3);
+            border: 3px solid #4CAF50;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-content h2 {
+            color: #2E7D32;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .modal-content p {
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #558B2F;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0 20px 0;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            color: #2E5C3E;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .modal-input::placeholder {
+            color: #90A4AE;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #2E7D32;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-button {
+            background: linear-gradient(135deg, #43A047 0%, #2E7D32 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(46, 125, 50, 0.2);
+        }
+
+        .modal-button:hover {
+            background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            transform: scale(1.02);
+        }
+
+        .modal-button.cancel {
+            background-color: #90A4AE;
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #78909C;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F1F8E9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2E7D32;
+        }
+
+        /* iPad Mini Optimization */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .header-subtitle {
+                font-size: 11px;
+            }
+
+            .mascot-small {
+                width: 50px;
+                height: 50px;
+                right: 15px;
+            }
+
+            .game-header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .timer-box,
+            .score-box {
+                flex: 1;
+                min-width: 100px;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .timer-box .time-display,
+            .score-box .score-display {
+                font-size: 24px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            thead tr th,
+            tbody tr td {
+                padding: 8px;
+            }
+
+            .start-button {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .welcome-content {
+                padding: 30px;
+            }
+
+        .welcome-content h2 {
+            color: #2E7D32;
+            margin-bottom: 18px;
+            font-size: 30px;
+        }
+
+        .welcome-content p {
+            color: #558B2F;
+            margin-bottom: 24px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+            .mascot-welcome {
+                width: 120px;
+                height: 120px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .header {
+                padding: 10px 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #90A4AE;
+            padding: 40px;
+            font-size: 16px;
+        }
+    </style>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">MTBEHS-1019027763-258667</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">e4c35538-7127-4a35-955a-d59bb2f3ab3d</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://microncorp.sharepoint.com/sites/MTBEHS/_layouts/15/DocIdRedir.aspx?ID=MTBEHS-1019027763-258667, MTBEHS-1019027763-258667</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>機台安全檢查知多少</h1>
+            <div class="header-subtitle">🌳 工安環保月-守護森林安全計畫 🌳</div>
+            <div class="mascot-small" id="headerMascot" style="background-image: url('mascot.png');"></div>
+        </div>
+
+        <div class="tab-container">
+            <div class="tab active" onclick="switchTab('game')">🎮 遊戲頁面 Game page</div>
+            <div class="tab" onclick="switchTab('leaderboard')">🏆 排行榜 Leaderboard</div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Game Page -->
+            <div id="game" class="content active">
+                <div class="game-header">
+                    <div class="timer-box">
+                        ⏱️ Time<br>
+                        <span class="time-display" id="timerDisplay">30</span>秒
+                    </div>
+                    <div class="score-box">
+                        ⭐ Score<br>
+                        <span class="score-display" id="scoreDisplay">100</span>分
+                    </div>
+                </div>
+
+                <div class="question-info" id="questionInfo"></div>
+
+                <!-- ⚠️ 修改：把開始按鈕移到圖片區域內 -->
+            <div class="image-container" id="imageContainer">
+                <!-- 開始前背景底圖 -->
+                <div class="game-bg"></div>
+
+                <!-- 正式遊戲圖片 -->
+                <img id="gameImage" src="" alt="" style="display: none;">
+
+                <!-- Canvas -->
+                <canvas id="gameCanvas"></canvas>
+
+                <!-- 開始按鈕 -->
+                <button class="start-button-centered" id="startBtn" onclick="startChallenge()">Start Challenge</button>
+            </div>
+
+                <div class="error-display" id="errorDisplay"></div>
+            </div>
+
+            <!-- Leaderboard Page -->
+            <div id="leaderboard" class="content">
+                <div class="leaderboard-container">
+                    <div class="leaderboard-title">🏆 排行榜 Leaderboard</div>
+                    <div class="leaderboard-table-wrapper">
+                        <table id="leaderboardTable">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Work number</th>
+                                    <th>score</th>
+                                    <th>Game time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="export-button" onclick="exportToCSV()">📥 匯出為 CSV</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 歡迎彈跳視窗 ==================== -->
+    <div id="welcomeModal" class="welcome-modal show">
+        <div class="welcome-content">
+            <div class="mascot-welcome" style="background-image: url('mascot.png');"></div>
+            <h2>Welcome to the challenge!</h2>
+            <p>Are you ready to protect the safety of the forest?<br>Please enter your ID to start the challenge.</p>
+            <input type="text" class="welcome-input" id="welcomeWorkerInput" placeholder="Enter your work number" maxlength="20">
+            <button class="welcome-button" onclick="startGame()">Start game</button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 Challenge successful!</h2>
+            <p>Your Score: <strong id="finalScore">0</strong> 分</p>
+            <p>Used Time: <strong><span id="usedTime">0</span></strong> 秒</p>
+            <!-- ⚠️ 新增：顯示目前排名 -->
+            <p style="color: #FF9800; margin-top: 15px; font-size: 18px; font-weight: bold;">
+                🏆 Current Rank: <span id="currentRank">-</span>
+            </p>
+            <p style="color: #2E7D32; margin-top: 15px;">New Challenge?</p>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="goToLeaderboard()">Leaderboard</button>
+                <button class="modal-button cancel" onclick="backToWelcome()">Home Page</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeout Modal -->
+    <div id="timeoutModal" class="modal">
+        <div class="modal-content">
+            <h2>⏰ Time's up: </h2>
+            <p>Timeout Score: <strong id="timeoutScore">0</strong> 分</p>
+            <p>Missed Count: <strong><span id="missedCount">0</span></strong></p>
+            <!-- ⚠️ 新增：顯示目前排名 -->
+            <p style="color: #FF9800; margin-top: 15px; font-size: 18px; font-weight: bold;">
+                🏆 Current Rank: <span id="currentRankTimeout">-</span>
+            </p>
+            <p style="color: #2E7D32; margin-top: 15px;">New Challenge?
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="goToLeaderboard()">Leaderboard</button>
+                <button class="modal-button cancel" onclick="backToWelcome()">Home Page</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== ⚠️ 修改點 A：遊戲題目設定 ====================
+        const gameQuestions = [
+            {
+                imageUrl: '01插座損壞.jpg',
+                errorPoints: [
+                    { type: 'circle', x: 0.444, y: 0.284, radius: 0.19, label: '插座損壞' },
+                ]
+            },
+            {
+                imageUrl: '02機台蓋板無圍圍籬.jpg',
+                errorPoints: [
+                    { type: 'circle', x: 0.590, y: 0.661, radius: 0.3, label: '機台蓋板無圍圍籬' },
+                //  { x: 0.6, y: 0.2, radius: 0.05, label: '未張貼危害標示2' },
+                ]
+            },
+            //{
+                //imageUrl: '03錶頭無上下標 (2).jpg',
+               // errorPoints: [
+                  //  { type: 'rect', x: 0.517, y: 0.580, width: 0.1, height: 0.2, label: '錶頭無上下限標示' },
+             //  ]
+           // },
+            {
+                imageUrl: '04管路開孔無盲封.jpg',
+                errorPoints: [
+                    { x: 0.672, y: 0.642, radius: 0.2, label: '管路開孔無盲封' },
+                ]
+            },
+            {
+                imageUrl: '05廢棄物未整理整頓.jpg',
+                errorPoints: [
+                    { x: 0.653, y: 0.543, radius: 0.2, label: '廢棄物未整理整頓' },
+                ]
+            },
+            {
+                imageUrl: '06無EMO中文標示.jpg',
+                errorPoints: [
+                    { x: 0.802, y: 0.549, radius: 0.1, label: '無EMO中文標示' },
+                ]
+            },
+            {
+                imageUrl: '07GHS標示非彩色.jpg',
+                errorPoints: [
+                    { x: 0.470, y: 0.401, radius: 0.19, label: '化學品 GHS標示非彩色' },
+                ]
+            },
+            {
+                imageUrl: '08管路品管貼紙破損.jpg',
+                errorPoints: [
+                    { x: 0.392, y: 0.564, radius: 0.15, label: '管路品管貼紙破損' },
+                    { x: 0.668, y: 0.245, radius: 0.15, label: '管路品管貼紙破損' },
+                ]
+            },
+            {
+                imageUrl: '09附屬機台腳座未固定.jpg',
+                errorPoints: [
+                    { x: 0.411, y: 0.575, radius: 0.2, label: '防震腳座未固定' },
+                ]
+            },
+            {
+                imageUrl: '10無排氣掛牌.jpg',
+                errorPoints: [
+                    { x: 0.444, y: 0.284, radius: 0.1, label: '無排氣管路掛牌' },
+                ]
+            },
+            {
+                imageUrl: '11管路流向未標示.jpg',
+                errorPoints: [
+                    { x: 0.335, y: 0.314, radius: 0.25, label: '管路名稱及流向未標示' },
+                ]
+            },
+        ];  
+
+        // ==================== 遊戲狀態 ====================
+        let gameState = {
+            isRunning: false,
+            currentQuestion: 0,
+            timeLeft: 30,
+            score: 100,
+            timerInterval: null,
+            scoreInterval: null,
+            foundErrors: new Set(),
+            startTime: 0,
+            leaderboard: [],
+            currentWorkerID: ''
+        };
+
+        // ==================== 初始化 ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLeaderboardFromStorage();
+            updateLeaderboardDisplay();
+            setupCanvasListener();
+        });
+
+        // ==================== 歡迎視窗邏輯 ====================
+        function startGame() {
+            const workerID = document.getElementById('welcomeWorkerInput').value.trim();
+            if (!workerID) {
+                alert('Enter your work number');
+                return;
+            }
+
+            gameState.currentWorkerID = workerID;
+            document.getElementById('welcomeModal').classList.remove('show');
+            document.getElementById('startBtn').focus();
+        }
+
+        function backToWelcome() {
+            // 儲存遊戲成績
+            const currentScore = parseInt(document.getElementById('scoreDisplay').innerText);
+            const currentTime = 30 - gameState.timeLeft;
+            
+            addToLeaderboard(gameState.currentWorkerID, currentScore, currentTime);
+            
+            // ⚠️ 重置遊戲畫面
+            // 清除圖片
+            document.getElementById('gameImage').src = '';
+            document.querySelector('.game-bg').style.display = 'block';
+            
+            // 清除 Canvas 畫布
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 顯示開始按鈕
+            document.getElementById('startBtn').classList.remove('hidden');
+            
+            // 重置分數和時間顯示
+            document.getElementById('scoreDisplay').innerText = '100';
+            document.getElementById('timerDisplay').innerText = '30';
+            document.getElementById('questionInfo').innerText = '';
+            document.getElementById('errorDisplay').innerText = '';
+            
+            // 回到歡迎視窗
+            document.getElementById('welcomeModal').classList.add('show');
+            document.getElementById('welcomeWorkerInput').value = '';
+            document.getElementById('welcomeWorkerInput').focus();
+            closeModal();
+        }
+
+        function goToLeaderboard() {
+            // 先儲存成績
+            const currentScore = parseInt(document.getElementById('scoreDisplay').innerText);
+            const currentTime = 30 - gameState.timeLeft;
+            addToLeaderboard(gameState.currentWorkerID, currentScore, currentTime);
+            // 關閉彈跳視窗
+            closeModal();
+            // 切換到排行榜頁籤
+            switchTab('排行榜 leaderboard');
+        }
+
+        // ==================== 頁籤切換 ====================
+        function switchTab(tabName) {
+            document.querySelectorAll('.content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // ⚠️ 新增：如果切換回遊戲頁面，就重置遊戲狀態
+            if (tabName === 'game') {
+                resetGamePage();
+            }
+        }
+
+        // ⚠️ 新增：重置遊戲頁面函數
+        function resetGamePage() {
+            // 停止正在執行的遊戲
+            if (gameState.isRunning) {
+                gameState.isRunning = false;
+                clearInterval(gameState.timerInterval);
+                clearInterval(gameState.scoreInterval);
+            }
+
+            // 清除圖片
+            document.getElementById('gameImage').src = '';
+
+            // 清除 Canvas 畫布
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 顯示開始按鈕
+            document.getElementById('startBtn').classList.remove('hidden');
+            document.getElementById('startBtn').disabled = false;
+
+            // 重置分數和時間顯示
+            document.getElementById('scoreDisplay').innerText = '100';
+            document.getElementById('timerDisplay').innerText = '30';
+            document.getElementById('questionInfo').innerText = '';
+            document.getElementById('errorDisplay').innerText = '';
+        }
+
+        // ==================== 遊戲邏輯 ====================
+        function startChallenge() {
+            if (gameState.isRunning) return;
+            if (!gameState.currentWorkerID) {
+                alert('請先在歡迎視窗輸入工號');
+                return;
+            }
+
+            gameState.isRunning = true;
+            gameState.currentQuestion = 0;
+            gameState.timeLeft = 30;
+            gameState.score = 100;
+            gameState.foundErrors = new Set();
+            gameState.startTime = Date.now();
+
+            // ⚠️ 隱藏開始按鈕
+            document.getElementById('startBtn').classList.add('hidden');
+            document.getElementById('startBtn').disabled = true;
+                // ⭐ 隱藏背景
+            document.querySelector('.game-bg').style.display = 'none'; 
+            
+            document.getElementById('errorDisplay').innerText = '';
+            loadQuestion();
+            startTimer();
+            startScoreDecrement();
+        }
+
+        function loadQuestion() {
+            if (gameState.currentQuestion >= gameQuestions.length) {
+                endGame('success');
+                return;
+            }
+
+            const question = gameQuestions[gameState.currentQuestion];
+            const img = document.getElementById('gameImage');
+            img.src = question.imageUrl;
+            img.style.display = 'block'; 
+
+            const totalQuestions = gameQuestions.length;
+            const currentQuestion = gameState.currentQuestion + 1;
+            const errorCount = question.errorPoints.length;
+            document.getElementById('questionInfo').innerText = 
+                `第 ${currentQuestion}/${totalQuestions} 題 - 請找出 ${errorCount} 個錯誤`;
+
+            img.onload = () => {
+                drawCanvas();
+            };
+
+            img.onerror = () => {
+                document.getElementById('errorDisplay').innerText = '❌ 圖片載入失敗，請檢查圖片路徑';
+            };
+
+            gameState.foundErrors.clear();
+        }
+
+        function drawCanvas() {
+            const canvas = document.getElementById('gameCanvas');
+            const img = document.getElementById('gameImage');
+
+            // ⚠️ 確保 Canvas 尺寸與圖片顯示尺寸一致
+            canvas.width = img.offsetWidth;
+            canvas.height = img.offsetHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const question = gameQuestions[gameState.currentQuestion];
+            gameState.foundErrors.forEach(index => {
+                const error = question.errorPoints[index];
+                drawErrorCircle(ctx, error.x, error.y, error.radius); 
+            });
+        }
+
+        function drawErrorCircle(ctx, x, y, radius) {
+            const canvas = document.getElementById('gameCanvas');
+
+            const scaledX = x * canvas.width;
+            const scaledY = y * canvas.height;
+            const scaledRadius = radius * canvas.width;
+
+            ctx.fillStyle = 'rgba(46, 125, 50, 0.2)';
+            ctx.beginPath();
+            ctx.arc(scaledX, scaledY, scaledRadius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.strokeStyle = '#2E7D32';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(scaledX, scaledY, scaledRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+         }
+
+        function setupCanvasListener() {
+            const canvas = document.getElementById('gameCanvas');
+            canvas.addEventListener('click', handleCanvasClick);
+        }
+
+        // ⚠️ 新增：計算圖片縮放比例
+        function getImageScale() {
+            const img = document.getElementById('gameImage');
+            const canvas = document.getElementById('gameCanvas');
+            
+            // 如果圖片還沒載入，先回傳 1（無縮放）
+            if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+                return { scaleX: 1, scaleY: 1 };
+            }
+            
+            // 計算縮放比例
+            // （圖片在頁面上的實際大小 / 圖片的原始大小）
+            const scaleX = canvas.width / img.naturalWidth;
+            const scaleY = canvas.height / img.naturalHeight;
+            
+            return { scaleX, scaleY };
+        }
+
+        /* 要抓座標就開 true*/
+        const DEBUG_MODE = true; 
+        //const DEBUG_MODE = false; 
+        
+
+        function handleCanvasClick(event) {
+            const canvas = document.getElementById('gameCanvas');
+            const rect = canvas.getBoundingClientRect();
+
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            // ⭐ 自動產生比例座標（會顯示在 console）
+            const percentX = clickX / canvas.width;
+            const percentY = clickY / canvas.height;
+
+            if (DEBUG_MODE) {
+                console.log(`{ x: ${percentX.toFixed(3)}, y: ${percentY.toFixed(3)}, radius: 0.05 }`);
+            }
+
+            // ===== 原本遊戲判斷 =====
+            if (!gameState.isRunning) return;
+
+            const question = gameQuestions[gameState.currentQuestion];
+            let hitError = false;
+
+            for (let i = 0; i < question.errorPoints.length; i++) {
+                if (gameState.foundErrors.has(i)) continue;
+
+                const error = question.errorPoints[i];
+
+                const scaledErrorX = error.x * canvas.width;
+                const scaledErrorY = error.y * canvas.height;
+                const scaledRadius = error.radius * canvas.width;
+
+                const distance = Math.sqrt(
+                    (clickX - scaledErrorX) ** 2 +
+                    (clickY - scaledErrorY) ** 2
+                );
+
+                if (distance <= scaledRadius) {
+                    gameState.foundErrors.add(i);
+                    hitError = true;
+
+                    gameState.score += 5;
+                    document.getElementById('scoreDisplay').innerText = gameState.score;
+
+                    document.getElementById('errorDisplay').innerText = `✓ ${error.label}`;
+                    drawCanvas();
+
+                    if (gameState.foundErrors.size === question.errorPoints.length) {
+                        setTimeout(nextQuestion, 800);
+                    }
+                    break;
+                }
+            }
+
+            if (!hitError && gameState.isRunning) {
+                document.getElementById('errorDisplay').innerText = '❌ 點擊位置不正確';
+            }
+        }
+
+        function nextQuestion() {
+            gameState.currentQuestion++;
+            if (gameState.currentQuestion >= gameQuestions.length) {
+                endGame('success');
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timerDisplay').innerText = gameState.timeLeft;
+
+                if (gameState.timeLeft <= 0) {
+                    endGame('timeout');
+                }
+            }, 1000);
+        }
+
+        function startScoreDecrement() {
+            gameState.scoreInterval = setInterval(() => {
+                if (gameState.score > 0) {
+                    let deduction = 0.2; // 預設扣分
+                    
+                    // ⚠️ 新增：分段扣分邏輯
+                    if (gameState.timeLeft > 20) {
+                        // 前 10 秒（時間 30→20）：每0.1秒扣 0.2 分
+                        deduction = 0.2;
+                    } else if (gameState.timeLeft > 10) {
+                        // 中 10 秒（時間 20→10）：每0.1秒扣 0.35 分
+                        deduction = 0.35;
+                    } else {
+                        // 後 10 秒（時間 10→0）：每0.1秒扣 0.45 分
+                        deduction = 0.45;
+                    }
+                    
+                    gameState.score -= deduction;
+                    if (gameState.score < 0) gameState.score = 0;
+                    document.getElementById('scoreDisplay').innerText = gameState.score.toFixed(2);
+                }
+            }, 100);
+        }
+
+        // ⚠️ 新增：計算目前排名
+        function calculateCurrentRank(score, time) {
+            const sortedLeaderboard = [...gameState.leaderboard].sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                return a.time - b.time;
+            });
+
+            // 計算該成績會排在第幾名
+            let rank = 1;
+            for (let i = 0; i < sortedLeaderboard.length; i++) {
+                if (score < sortedLeaderboard[i].score) {
+                    rank++;
+                } else if (score === sortedLeaderboard[i].score && time > sortedLeaderboard[i].time) {
+                    rank++;
+                } else {
+                    break;
+                }
+            }
+
+            return rank;
+        }
+
+        function endGame(reason) {
+            gameState.isRunning = false;
+            clearInterval(gameState.timerInterval);
+            clearInterval(gameState.scoreInterval);
+            document.getElementById('startBtn').disabled = false;
+
+            const usedTime = 30 - gameState.timeLeft;
+            
+            // ⚠️ 新增：計算排名
+            const currentRank = calculateCurrentRank(gameState.score, usedTime);
+
+            if (reason === 'success') {
+                document.getElementById('finalScore').innerText = gameState.score.toFixed(2);
+                document.getElementById('usedTime').innerText = usedTime;
+                // ⚠️ 新增：顯示排名
+                document.getElementById('currentRank').innerText = currentRank;
+                document.getElementById('successModal').classList.add('show');
+            } else {
+                const question = gameQuestions[gameState.currentQuestion];
+                const missedCount = question.errorPoints.length - gameState.foundErrors.size;
+                document.getElementById('timeoutScore').innerText = gameState.score.toFixed(2);
+                document.getElementById('missedCount').innerText = missedCount;
+                // ⚠️ 新增：顯示排名
+                document.getElementById('currentRankTimeout').innerText = currentRank;
+                document.getElementById('timeoutModal').classList.add('show');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('show');
+            document.getElementById('timeoutModal').classList.remove('show');
+        }
+
+        // ==================== 排行榜邏輯 ====================
+        function addToLeaderboard(workerID, score, time) {
+            const entry = {
+                workerId: workerID,
+                score: score,
+                time: time,
+                timestamp: new Date().toLocaleString('zh-TW')
+            };
+
+            gameState.leaderboard.push(entry);
+            saveLeaderboardToStorage();
+            updateLeaderboardDisplay();
+        }
+
+        function updateLeaderboardDisplay() {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+
+            if (gameState.leaderboard.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 40px; color: #90A4AE;">目前沒有記錄</td></tr>';
+                return;
+            }
+
+            const sortedLeaderboard = [...gameState.leaderboard].sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                return a.time - b.time;
+            });
+
+            sortedLeaderboard.forEach((entry, index) => {
+                const row = tbody.insertRow();
+                const rankCell = row.insertCell(0);
+                const workerCell = row.insertCell(1);
+                const scoreCell = row.insertCell(2);
+                const timeCell = row.insertCell(3);
+
+                let badgeClass = '';
+                if (index === 0) badgeClass = 'first';
+                else if (index === 1) badgeClass = 'second';
+                else if (index === 2) badgeClass = 'third';
+
+                rankCell.innerHTML = `<span class="rank-badge ${badgeClass}">${index + 1}</span>`;
+                workerCell.innerText = entry.workerId;
+                scoreCell.innerText = entry.score.toFixed(2) + ' 分';
+                timeCell.innerText = entry.time + ' 秒';
+            });
+        }
+
+        // ⭐ 在函式外面加入計數器（放在 gameState 附近）
+        let exportCount = 0;
+
+        function exportToCSV() {
+        if (gameState.leaderboard.length === 0) {
+            alert('排行榜為空，無法匯出');
+            return;
+        }
+
+        // 讓主持人輸入裝置編號（只有第一次需要輸入）
+        const deviceNum = prompt('請輸入裝置編號（1[Cynthia] 或 2[??]）', '1');
+        if (!deviceNum) return;
+
+        // ⭐ 每次匯出時計數器 +1
+        exportCount++;
+
+        const sortedLeaderboard = [...gameState.leaderboard].sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return a.time - b.time;
+        });
+
+        let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+        csvContent += '排名,工號,分數,用時(秒),提交時間\n';
+        sortedLeaderboard.forEach((entry, index) => {
+            csvContent += `${index + 1},${entry.workerId},${entry.score},${entry.time},${entry.timestamp}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+
+        // ⭐ 檔名包含裝置編號 + 第幾次匯出 + 日期
+        const date = new Date().toISOString().slice(0, 10);
+        link.setAttribute('download', `機台檢查遊戲排行榜_裝置${deviceNum}_第${exportCount}個檔_${date}.csv`);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        }
+
+        function clearLeaderboard() {
+            if (confirm('確定要清空所有排行榜記錄嗎？此操作無法復原。')) {
+                gameState.leaderboard = [];
+                saveLeaderboardToStorage();
+                updateLeaderboardDisplay();
+                alert('排行榜已清空');
+            }
+        }
+
+        // ==================== 本地存儲 ====================
+        function saveLeaderboardToStorage() {
+            localStorage.setItem('gameLeaderboard', JSON.stringify(gameState.leaderboard));
+        }
+
+        function loadLeaderboardFromStorage() {
+            const stored = localStorage.getItem('gameLeaderboard');
+            if (stored) {
+                gameState.leaderboard = JSON.parse(stored);
+            }
+        }
+
+        // ==================== 關閉提示 ====================
+        window.addEventListener('beforeunload', () => {
+            if (gameState.isRunning) {
+                return '遊戲進行中，確定要離開嗎？';
+            }
+        });
+
+        // 初始焦點
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('welcomeWorkerInput').focus();
+        });
+    </script>
+</body>
+</html>
