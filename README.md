@@ -1,1 +1,0 @@
-# Machine-inspection-game
