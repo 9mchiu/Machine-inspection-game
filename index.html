@@ -251,10 +251,12 @@
             align-self: center;
         }
 
+        /* ⚠️ 統一為 cover（與下方規則一致）：熱區座標是依 cover 顯示校正的，
+           若改回 contain 會讓所有題目的點擊座標位移。 */
         .image-container img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover;
             cursor: crosshair;
         }
 
@@ -801,8 +803,8 @@
         </div>
 
         <div class="tab-container">
-            <div class="tab active" onclick="switchTab('game')">🎮 遊戲頁面 Game page</div>
-            <div class="tab" onclick="switchTab('leaderboard')">🏆 排行榜 Leaderboard</div>
+            <div class="tab active" onclick="switchTab('game', event)">🎮 遊戲頁面 Game page</div>
+            <div class="tab" onclick="switchTab('leaderboard', event)">🏆 排行榜 Leaderboard</div>
         </div>
 
         <div class="content-wrapper">
@@ -1006,6 +1008,14 @@
             setupCanvasListener();
         });
 
+        // ⚠️ 新增：視窗縮放 / 平板旋轉時，重新對齊 canvas 與圖片尺寸
+        window.addEventListener('resize', () => {
+            const img = document.getElementById('gameImage');
+            if (img && img.complete && img.naturalWidth > 0 && img.style.display !== 'none') {
+                drawCanvas();
+            }
+        });
+
         // ==================== 歡迎視窗邏輯 ====================
         function startGame() {
             const workerID = document.getElementById('welcomeWorkerInput').value.trim();
@@ -1021,7 +1031,7 @@
 
         function backToWelcome() {
             // 儲存遊戲成績
-            const currentScore = parseInt(document.getElementById('scoreDisplay').innerText);
+            const currentScore = Math.round(gameState.score * 100) / 100;  // ⚠️ 修正：用實際分數(保留小數)，不用 parseInt 截斷
             const currentTime = 30 - gameState.timeLeft;
             
             addToLeaderboard(gameState.currentWorkerID, currentScore, currentTime);
@@ -1054,17 +1064,17 @@
 
         function goToLeaderboard() {
             // 先儲存成績
-            const currentScore = parseInt(document.getElementById('scoreDisplay').innerText);
+            const currentScore = Math.round(gameState.score * 100) / 100;  // ⚠️ 修正：用實際分數(保留小數)，不用 parseInt 截斷
             const currentTime = 30 - gameState.timeLeft;
             addToLeaderboard(gameState.currentWorkerID, currentScore, currentTime);
             // 關閉彈跳視窗
             closeModal();
             // 切換到排行榜頁籤
-            switchTab('排行榜 leaderboard');
+            switchTab('leaderboard');
         }
 
         // ==================== 頁籤切換 ====================
-        function switchTab(tabName) {
+        function switchTab(tabName, evt) {
             document.querySelectorAll('.content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -1072,10 +1082,19 @@
                 tab.classList.remove('active');
             });
 
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            const content = document.getElementById(tabName);
+            if (content) content.classList.add('active');
 
-            // ⚠️ 新增：如果切換回遊戲頁面，就重置遊戲狀態
+            // ⚠️ 修正：不依賴全域 event（程式呼叫 goToLeaderboard 時沒有 event）
+            const tabs = document.querySelectorAll('.tab');
+            const idx = tabName === 'game' ? 0 : 1;
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            } else if (tabs[idx]) {
+                tabs[idx].classList.add('active');
+            }
+
+            // 如果切換回遊戲頁面，就重置遊戲狀態
             if (tabName === 'game') {
                 resetGamePage();
             }
@@ -1144,24 +1163,29 @@
 
             const question = gameQuestions[gameState.currentQuestion];
             const img = document.getElementById('gameImage');
-            img.src = question.imageUrl;
-            img.style.display = 'block'; 
 
             const totalQuestions = gameQuestions.length;
             const currentQuestion = gameState.currentQuestion + 1;
             const errorCount = question.errorPoints.length;
-            document.getElementById('questionInfo').innerText = 
+            document.getElementById('questionInfo').innerText =
                 `第 ${currentQuestion}/${totalQuestions} 題 - 請找出 ${errorCount} 個錯誤`;
 
+            gameState.foundErrors.clear();
+
+            // ⚠️ 修正：先綁 onload/onerror 再設 src，避免圖片已被快取時 onload 不觸發、
+            //          導致 drawCanvas 沒跑、canvas 尺寸停在預設值 → 點擊判定失準。
             img.onload = () => {
                 drawCanvas();
             };
-
             img.onerror = () => {
                 document.getElementById('errorDisplay').innerText = '❌ 圖片載入失敗，請檢查圖片路徑';
             };
-
-            gameState.foundErrors.clear();
+            img.style.display = 'block';
+            img.src = question.imageUrl;
+            // 圖片已快取時 onload 可能不觸發，手動補繪一次
+            if (img.complete && img.naturalWidth > 0) {
+                drawCanvas();
+            }
         }
 
         function drawCanvas() {
@@ -1206,27 +1230,8 @@
             canvas.addEventListener('click', handleCanvasClick);
         }
 
-        // ⚠️ 新增：計算圖片縮放比例
-        function getImageScale() {
-            const img = document.getElementById('gameImage');
-            const canvas = document.getElementById('gameCanvas');
-            
-            // 如果圖片還沒載入，先回傳 1（無縮放）
-            if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-                return { scaleX: 1, scaleY: 1 };
-            }
-            
-            // 計算縮放比例
-            // （圖片在頁面上的實際大小 / 圖片的原始大小）
-            const scaleX = canvas.width / img.naturalWidth;
-            const scaleY = canvas.height / img.naturalHeight;
-            
-            return { scaleX, scaleY };
-        }
-
-        /* 要抓座標就開 true*/
-        const DEBUG_MODE = true; 
-        //const DEBUG_MODE = false; 
+        /* 要抓座標校正時才開 true；正式上線請維持 false */
+        const DEBUG_MODE = false;
         
 
         function handleCanvasClick(event) {
