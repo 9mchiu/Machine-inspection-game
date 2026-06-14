@@ -1037,8 +1037,12 @@
             addToLeaderboard(gameState.currentWorkerID, currentScore, currentTime);
             
             // ⚠️ 重置遊戲畫面
-            // 清除圖片
-            document.getElementById('gameImage').src = '';
+            // 清除圖片（先移除事件處理器，避免清空 src 觸發 onerror）
+            const giB = document.getElementById('gameImage');
+            giB.onload = null;
+            giB.onerror = null;
+            giB.removeAttribute('src');
+            giB.style.display = 'none';
             document.querySelector('.game-bg').style.display = 'block';
             
             // 清除 Canvas 畫布
@@ -1109,8 +1113,12 @@
                 clearInterval(gameState.scoreInterval);
             }
 
-            // 清除圖片
-            document.getElementById('gameImage').src = '';
+            // ⚠️ 修正：先移除事件處理器再清 src，避免清空時觸發 onerror 顯示「圖片載入失敗」
+            const giR = document.getElementById('gameImage');
+            giR.onload = null;
+            giR.onerror = null;
+            giR.removeAttribute('src');
+            giR.style.display = 'none';
 
             // 清除 Canvas 畫布
             const canvas = document.getElementById('gameCanvas');
